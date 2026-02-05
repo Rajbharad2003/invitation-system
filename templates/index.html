@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation Automation System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🎉</span>
+                <h1>Invitation Automation</h1>
+            </div>
+            <p class="subtitle">Create personalized invitations and send via WhatsApp</p>
+        </header>
+
+        <!-- Step 1: Upload Files -->
+        <section class="card upload-section" id="uploadSection">
+            <div class="card-header">
+                <span class="step-badge">Step 1</span>
+                <h2>Upload Files</h2>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-grid">
+                        <div class="upload-box" id="pdfUploadBox">
+                            <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" hidden>
+                            <div class="upload-content">
+                                <span class="upload-icon">📄</span>
+                                <h3>PDF Invitation</h3>
+                                <p>Click to upload or drag & drop</p>
+                                <span class="file-name" id="pdfFileName"></span>
+                            </div>
+                        </div>
+                        <div class="upload-box" id="excelUploadBox">
+                            <input type="file" id="excelFile" name="excel_file" accept=".xlsx" hidden>
+                            <div class="upload-content">
+                                <span class="upload-icon">📊</span>
+                                <h3>Excel Contact List</h3>
+                                <p>Name & Mobile columns</p>
+                                <span class="file-name" id="excelFileName"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                        <span>Upload Files</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </form>
+                <div class="message" id="uploadMessage"></div>
+            </div>
+        </section>
+
+        <!-- Step 2: Position Name -->
+        <section class="card position-section hidden" id="positionSection">
+            <div class="card-header">
+                <span class="step-badge">Step 2</span>
+                <h2>Position the Name</h2>
+            </div>
+            <div class="card-body">
+                <p class="instruction">Click on the PDF preview where you want the name to appear</p>
+
+                <div class="controls-row">
+                    <div class="control-group page-controls">
+                        <label>Page Selection</label>
+                        <div class="page-nav">
+                            <button type="button" class="btn btn-sm" id="prevPageBtn" disabled>◀</button>
+                            <span id="pageIndicator">Page 1 of 1</span>
+                            <button type="button" class="btn btn-sm" id="nextPageBtn" disabled>▶</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="fontFamily">Font Family</label>
+                        <select id="fontFamily">
+                            <option value="helv">Helvetica / Arial</option>
+                            <option value="times-roman">Times New Roman</option>
+                            <option value="courier">Courier</option>
+                            <option value="gujarati">Gujarati (Noto Sans)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label for="fontSize">Font Size</label>
+                        <input type="range" id="fontSize" min="12" max="72" value="24">
+                        <span id="fontSizeValue">24px</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="fontColor">Font Color</label>
+                        <input type="color" id="fontColor" value="#000000">
+                    </div>
+                    <div class="control-group">
+                        <label for="sampleName">Preview Name</label>
+                        <input type="text" id="sampleName" value="John Doe" placeholder="Sample name">
+                    </div>
+                </div>
+
+                <div class="preview-container">
+                    <div class="preview-wrapper" id="previewWrapper">
+                        <img id="pdfPreview" src="" alt="PDF Preview">
+                        <div class="name-marker" id="nameMarker" style="display: none;">
+                            <span id="markerText">John Doe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="position-info">
+                    <div class="coord-input-group">
+                        <label>X:</label>
+                        <input type="number" id="posXInput" class="coord-input" value="100">
+                    </div>
+                    <div class="coord-input-group">
+                        <label>Y:</label>
+                        <input type="number" id="posYInput" class="coord-input" value="100">
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" id="refreshPreviewBtn">
+                    <span>🔄</span> Refresh Preview with Name
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 3: Review & Send -->
+        <section class="card send-section hidden" id="sendSection">
+            <div class="card-header">
+                <span class="step-badge">Step 3</span>
+                <h2>Review & Create</h2>
+            </div>
+            <div class="card-body">
+                <div class="contacts-summary">
+                    <h3>📋 Contacts Found: <span id="contactCount">0</span></h3>
+                    <div class="contacts-list" id="contactsList"></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-large" id="generateOnlyBtn">
+                        <span>📄</span> Generate PDFs
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="card results-section hidden" id="resultsSection">
+            <div class="card-header">
+                <span class="step-badge">✓</span>
+                <h2>Results</h2>
+            </div>
+            <div class="card-body">
+                <div class="results-summary" id="resultsSummary"></div>
+                <div class="results-list" id="resultsList"></div>
+            </div>
+        </section>
+
+        <!-- Progress Overlay -->
+        <div class="progress-overlay hidden" id="progressOverlay">
+            <div class="progress-content">
+                <div class="spinner"></div>
+                <h3 id="progressTitle">Processing...</h3>
+                <p id="progressMessage">Please wait...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressDetail"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let sessionId = null;
+        let namePosition = { x: 100, y: 100 };
+        let zoom = 1.5;
+        let contacts = [];
+        let currentPage = 0;
+        let totalPages = 1;
+
+        // DOM Elements
+        const uploadSection = document.getElementById('uploadSection');
+        const positionSection = document.getElementById('positionSection');
+        const sendSection = document.getElementById('sendSection');
+        const resultsSection = document.getElementById('resultsSection');
+
+        const pdfUploadBox = document.getElementById('pdfUploadBox');
+        const excelUploadBox = document.getElementById('excelUploadBox');
+        const pdfFile = document.getElementById('pdfFile');
+        const excelFile = document.getElementById('excelFile');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadMessage = document.getElementById('uploadMessage');
+
+        const pdfPreview = document.getElementById('pdfPreview');
+        const previewWrapper = document.getElementById('previewWrapper');
+        const nameMarker = document.getElementById('nameMarker');
+        const markerText = document.getElementById('markerText');
+
+        const fontSize = document.getElementById('fontSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const fontColor = document.getElementById('fontColor');
+        const fontFamily = document.getElementById('fontFamily');
+        const sampleName = document.getElementById('sampleName');
+
+        const progressOverlay = document.getElementById('progressOverlay');
+
+        // New Elements
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        const pageIndicator = document.getElementById('pageIndicator');
+        const posXInput = document.getElementById('posXInput');
+        const posYInput = document.getElementById('posYInput');
+
+        // File upload handling
+        pdfUploadBox.addEventListener('click', () => pdfFile.click());
+        excelUploadBox.addEventListener('click', () => excelFile.click());
+
+        pdfFile.addEventListener('change', () => {
+            const name = pdfFile.files[0]?.name || '';
+            document.getElementById('pdfFileName').textContent = name;
+            if (name) {
+                pdfUploadBox.classList.add('has-file');
+                checkAndAutoUpload();
+            }
+        });
+
+        excelFile.addEventListener('change', () => {
+            const name = excelFile.files[0]?.name || '';
+            document.getElementById('excelFileName').textContent = name;
+            if (name) {
+                excelUploadBox.classList.add('has-file');
+                checkAndAutoUpload();
+            }
+        });
+
+        function checkAndAutoUpload() {
+            if (pdfFile.files[0] && excelFile.files[0] && !sessionId) {
+                uploadForm.dispatchEvent(new Event('submit'));
+            }
+        }
+
+        // Drag and drop
+        [pdfUploadBox, excelUploadBox].forEach(box => {
+            box.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                box.classList.add('drag-over');
+            });
+            box.addEventListener('dragleave', () => {
+                box.classList.remove('drag-over');
+            });
+        });
+
+        pdfUploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfUploadBox.classList.remove('drag-over');
+            if (e.dataTransfer.files[0]?.type === 'application/pdf') {
+                pdfFile.files = e.dataTransfer.files;
+                document.getElementById('pdfFileName').textContent = e.dataTransfer.files[0].name;
+                pdfUploadBox.classList.add('has-file');
+            }
+        });
+
+        excelUploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            excelUploadBox.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file?.name.endsWith('.xlsx')) {
+                excelFile.files = e.dataTransfer.files;
+                document.getElementById('excelFileName').textContent = file.name;
+                excelUploadBox.classList.add('has-file');
+            }
+        });
+
+        // Upload form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!pdfFile.files[0] || !excelFile.files[0]) {
+                showMessage(uploadMessage, 'Please select both PDF and Excel files', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('pdf_file', pdfFile.files[0]);
+            formData.append('excel_file', excelFile.files[0]);
+
+            showProgress('Uploading Files', 'Please wait...');
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                hideProgress();
+
+                if (data.success) {
+                    sessionId = data.session_id;
+                    totalPages = data.page_count || 1;
+                    currentPage = 0;
+                    updatePageControls();
+                    showMessage(uploadMessage, data.message, 'success');
+
+                    // Show next sections
+                    positionSection.classList.remove('hidden');
+                    sendSection.classList.remove('hidden');
+
+                    // Load preview
+                    loadPreview();
+
+                    // Load contacts
+                    loadContacts();
+
+                    // Scroll to position section
+                    positionSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showMessage(uploadMessage, data.message, 'error');
+                }
+            } catch (error) {
+                hideProgress();
+                showMessage(uploadMessage, 'Error uploading files: ' + error.message, 'error');
+            }
+        });
+
+        // Load PDF preview
+        function loadPreview() {
+            pdfPreview.src = `/preview/${sessionId}?page=${currentPage}&zoom=${zoom}&t=${Date.now()}`;
+            updatePageControls();
+        }
+
+        function updatePageControls() {
+            pageIndicator.textContent = `Page ${currentPage + 1} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage <= 0;
+            nextPageBtn.disabled = currentPage >= totalPages - 1;
+        }
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 0) {
+                currentPage--;
+                loadPreview();
+                // Reset marker on page change as it might not be valid position
+                // Alternatively, keep it? Let's keep it but user might need to adjustments.
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadPreview();
+            }
+        });
+
+        // Load contacts
+        async function loadContacts() {
+            try {
+                const response = await fetch(`/contacts/${sessionId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    contacts = data.contacts;
+                    document.getElementById('contactCount').textContent = contacts.length;
+
+                    const list = document.getElementById('contactsList');
+                    list.innerHTML = contacts.map((c, i) => `
+                        <div class="contact-item" onclick="selectContact('${c.name.replace(/'/g, "\\'")}')">
+                            <span class="contact-number">${i + 1}</span>
+                            <span class="contact-name">${c.name}</span>
+                            <span class="contact-mobile">${c.mobile}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        window.selectContact = function (name) {
+            sampleName.value = name;
+            markerText.textContent = name;
+            // Highlight selected contact
+            const items = document.querySelectorAll('.contact-item');
+            items.forEach(item => {
+                if (item.querySelector('.contact-name').textContent === name) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+
+            // If we have a position, refresh the real preview
+            if (namePosition.x !== null) {
+                refreshRealPreview();
+            }
+        };
+
+        // Click on preview to position name
+        previewWrapper.addEventListener('click', (e) => {
+            const rect = pdfPreview.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            namePosition = { x, y };
+
+            // Show marker immediately for instant feedback
+            nameMarker.style.display = 'block';
+            nameMarker.style.left = x + 'px';
+            nameMarker.style.top = y + 'px';
+            markerText.textContent = sampleName.value;
+            markerText.style.fontSize = fontSize.value + 'px';
+            markerText.style.color = fontColor.value;
+            updateMarkerFont();
+
+            // Update coordinates inputs
+            const realX = Math.round(x / zoom);
+            const realY = Math.round(y / zoom);
+            posXInput.value = realX;
+            posYInput.value = realY;
+
+            // NEW: Auto-refresh real preview
+            refreshRealPreview();
+        });
+
+        async function refreshRealPreview() {
+            if (!sessionId || namePosition.x === null) return;
+
+            // Show loading state on preview
+            pdfPreview.style.opacity = '0.5';
+
+            const url = `/preview-with-name/${sessionId}?` + new URLSearchParams({
+                x: namePosition.x,
+                y: namePosition.y,
+                fontSize: fontSize.value,
+                fontColor: fontColor.value,
+                fontFamily: fontFamily.value,
+                name: sampleName.value,
+                page: currentPage,
+                zoom: zoom
+            });
+
+            const img = new Image();
+            img.onload = () => {
+                pdfPreview.src = img.src;
+                pdfPreview.style.opacity = '1';
+                nameMarker.style.display = 'none';
+
+                // Visual feedback for saved coordinates
+                const feedback = document.createElement('div');
+                feedback.className = 'save-feedback';
+                feedback.textContent = 'Coordinates Saved!';
+                document.body.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 2000);
+            };
+            img.src = url + '&t=' + Date.now();
+        }
+
+        // Manual coordinate update
+        function updateFromInputs() {
+            const x = parseInt(posXInput.value) * zoom;
+            const y = parseInt(posYInput.value) * zoom;
+
+            namePosition = { x, y };
+
+            // Move marker
+            markerText.style.display = 'block';
+            nameMarker.style.display = 'block'; // Ensure visible
+            nameMarker.style.left = x + 'px';
+            nameMarker.style.top = y + 'px';
+
+            // Ensure style is synced
+            markerText.textContent = sampleName.value;
+            markerText.style.fontSize = fontSize.value + 'px';
+            markerText.style.color = fontColor.value;
+            updateMarkerFont();
+        }
+
+        posXInput.addEventListener('change', updateFromInputs);
+        posYInput.addEventListener('change', updateFromInputs);
+
+        // Font size slider
+        fontSize.addEventListener('input', () => {
+            fontSizeValue.textContent = fontSize.value + 'px';
+            markerText.style.fontSize = fontSize.value + 'px';
+        });
+
+        // Font color
+        fontColor.addEventListener('input', () => {
+            markerText.style.color = fontColor.value;
+        });
+
+        // Font family
+        fontFamily.addEventListener('change', () => {
+            updateMarkerFont();
+        });
+
+        function updateMarkerFont() {
+            const font = fontFamily.value;
+            if (font === 'helv') {
+                markerText.style.fontFamily = 'Helvetica, Arial, sans-serif';
+            } else if (font === 'times-roman') {
+                markerText.style.fontFamily = '"Times New Roman", Times, serif';
+            } else if (font === 'courier') {
+                markerText.style.fontFamily = '"Courier New", Courier, monospace';
+            } else if (font === 'gujarati') {
+                markerText.style.fontFamily = '"Noto Sans Gujarati", sans-serif';
+            }
+        }
+
+        // Sample name
+        sampleName.addEventListener('input', () => {
+            markerText.textContent = sampleName.value;
+        });
+
+        // Refresh preview with name
+        document.getElementById('refreshPreviewBtn').addEventListener('click', async () => {
+            if (!sessionId || namePosition.x === null) return;
+
+            const url = `/preview-with-name/${sessionId}?` + new URLSearchParams({
+                x: namePosition.x,
+                y: namePosition.y,
+                fontSize: fontSize.value,
+                fontColor: fontColor.value,
+                fontFamily: fontFamily.value,
+                name: sampleName.value,
+                page: currentPage,
+                zoom: zoom
+            });
+
+            pdfPreview.src = url + '&t=' + Date.now();
+            nameMarker.style.display = 'none';
+        });
+
+        // Generate PDFs only
+        document.getElementById('generateOnlyBtn').addEventListener('click', async () => {
+            if (!sessionId) return;
+
+            showProgress('Generating PDFs', 'Creating personalized invitations...');
+
+            try {
+                const response = await fetch('/generate-only', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        x: namePosition.x,
+                        y: namePosition.y,
+                        fontSize: parseInt(fontSize.value),
+                        fontColor: fontColor.value,
+                        fontFamily: fontFamily.value,
+                        pageNum: currentPage,
+                        zoom: zoom
+                    })
+                });
+
+                const data = await response.json();
+                hideProgress();
+
+                if (data.success) {
+                    showResults(data);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                hideProgress();
+                alert('Error: ' + error.message);
+            }
+        });
+
+        // Show results
+        function showResults(data) {
+            resultsSection.classList.remove('hidden');
+
+            const summary = document.getElementById('resultsSummary');
+            summary.innerHTML = `<div class="summary-box ${data.success ? 'success' : 'error'}">${data.message}</div>`;
+
+            if (data.files) {
+                const list = document.getElementById('resultsList');
+                list.innerHTML = `
+                    <p><strong>Output folder:</strong> ${data.output_folder}</p>
+                    <div class="files-list">
+                        ${data.files.map(f => `
+                            <div class="file-item success">
+                                <span>✓</span>
+                                <span>${f.name}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (data.results) {
+                const list = document.getElementById('resultsList');
+                list.innerHTML = data.results.map(r => `
+                    <div class="result-item ${r.success ? 'success' : 'error'}">
+                        <span class="result-icon">${r.success ? '✓' : '✗'}</span>
+                        <span class="result-name">${r.name}</span>
+                        <span class="result-mobile">${r.mobile}</span>
+                        <span class="result-message">${r.message}</span>
+                    </div>
+                `).join('');
+            }
+
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Helper functions
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = 'message ' + type;
+        }
+
+        function showProgress(title, message) {
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('progressMessage').textContent = message;
+            progressOverlay.classList.remove('hidden');
+        }
+
+        function hideProgress() {
+            progressOverlay.classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

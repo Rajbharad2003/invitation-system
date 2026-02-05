@@ -1,0 +1,45 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Uploads & generated files (VERY IMPORTANT)
+uploads/*
+output/*
+
+# But keep folders in git
+!uploads/.gitkeep
+!output/.gitkeep
+
+# Testing / coverage
+.coverage
+htmlcov/
+
+# Gunicorn
+gunicorn.pid
