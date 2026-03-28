@@ -172,6 +172,32 @@ body {
     font-weight: 500;
 }
 
+.demo-link-container {
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.demo-link-btn {
+    color: var(--primary-light);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.demo-link-btn:hover {
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.2);
+    transform: translateY(-1px);
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -655,4 +681,16 @@ body {
     15% { opacity: 1; transform: translate(-50%, 0); }
     85% { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+.download-box-final {
+    text-align: center;
+    padding: 30px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--primary);
+}
+
+.download-box-final p {
+    margin-bottom: 10px;
 }

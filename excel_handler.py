@@ -128,3 +128,30 @@ def validate_excel_file(excel_path: str) -> Dict:
         
     except Exception as e:
         return {'valid': False, 'message': f'Error reading Excel file: {str(e)}'}
+
+
+def create_demo_excel(file_path: str):
+    """
+    Create a demo Excel file with sample contacts.
+    """
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = "Contacts"
+    
+    # Add headers
+    sheet['A1'] = "Name"
+    sheet['B1'] = "Mobile"
+    
+    # Add sample data
+    sample_data = [
+        ("John Doe", "9904276722"),
+        ("Jane Smith", "9876543210"),
+        ("રાજ ભરડ", "9123456789") # Test with Gujarati name
+    ]
+    
+    for i, (name, mobile) in enumerate(sample_data, start=2):
+        sheet.cell(row=i, column=1).value = name
+        sheet.cell(row=i, column=2).value = mobile
+    
+    workbook.save(file_path)
+    workbook.close()

@@ -46,6 +46,11 @@
                                 <span class="file-name" id="excelFileName"></span>
                             </div>
                         </div>
+                        <div class="demo-link-container">
+                            <a href="/download-demo" class="demo-link-btn" target="_blank">
+                                <span>📥</span> Download Demo Excel
+                            </a>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary" id="uploadBtn">
                         <span>Upload Files</span>
@@ -574,20 +579,18 @@
             const summary = document.getElementById('resultsSummary');
             summary.innerHTML = `<div class="summary-box ${data.success ? 'success' : 'error'}">${data.message}</div>`;
 
-            if (data.files) {
+            if (data.zip_url) {
                 const list = document.getElementById('resultsList');
                 list.innerHTML = `
-                    <p><strong>Output folder:</strong> ${data.output_folder}</p>
-                    <div class="files-list">
-                        ${data.files.map(f => `
-                            <div class="file-item success">
-                                <span>✓</span>
-                                <span>${f.name}</span>
-                            </div>
-                        `).join('')}
+                    <div class="download-box-final">
+                        <p><strong>Your invitations are ready!</strong></p>
+                        <p>${data.count} personalized PDFs have been generated and bundled.</p>
+                        <a href="${data.zip_url}" class="btn btn-primary btn-large" style="margin-top: 20px;">
+                            <span>📦</span> Download All invitations (ZIP)
+                        </a>
                     </div>
                 `;
-            } else if (data.results) {
+            } else if (data.files) {
                 const list = document.getElementById('resultsList');
                 list.innerHTML = data.results.map(r => `
                     <div class="result-item ${r.success ? 'success' : 'error'}">

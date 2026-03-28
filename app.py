@@ -7,9 +7,11 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 import base64
+import zipfile
+from database_handler import log_usage, get_all_logs
 
 from pdf_handler import add_name_to_pdf, get_pdf_preview, get_pdf_dimensions, get_pdf_page_count
-from excel_handler import read_contacts, validate_excel_file
+from excel_handler import read_contacts, validate_excel_file, create_demo_excel
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -38,6 +40,17 @@ def allowed_file(filename, allowed_extensions):
 def index():
     """Main page with upload form and preview"""
     return render_template('index.html')
+
+
+@app.route('/download-demo')
+def download_demo():
+    """Generate and download a demo Excel file"""
+    try:
+        demo_path = os.path.join(app.config['UPLOAD_FOLDER'], 'demo_contacts.xlsx')
+        create_demo_excel(demo_path)
+        return send_file(demo_path, as_attachment=True, download_name='demo_contacts.xlsx')
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error generating demo file: {str(e)}'})
 
 
 @app.route('/upload', methods=['POST'])
@@ -314,15 +327,50 @@ def generate_only():
                 'path': output_pdf_path
             })
         
+        # Create ZIP file
+        zip_filename = f"invitations_{session_id}.zip"
+        zip_path = os.path.join(OUTPUT_FOLDER, zip_filename)
+        
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            for file_info in generated_files:
+                # Add file to zip, use arcname to avoid full path in zip
+                arcname = os.path.basename(file_info['path'])
+                zipf.write(file_info['path'], arcname=arcname)
+        
+        # Log usage to database
+        log_usage(session_id, len(generated_files), request.remote_addr)
+        
         return jsonify({
             'success': True,
             'message': f'Generated {len(generated_files)} personalized invitations.',
-            'files': generated_files,
-            'output_folder': output_session_folder
+            'zip_url': f'/download-zip/{session_id}',
+            'count': len(generated_files)
         })
         
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'})
+
+
+@app.route('/download-zip/<session_id>')
+def download_zip(session_id):
+    """Download the generated ZIP file"""
+    try:
+        zip_filename = f"invitations_{session_id}.zip"
+        zip_path = os.path.join(OUTPUT_FOLDER, zip_filename)
+        
+        if not os.path.exists(zip_path):
+            return jsonify({'success': False, 'message': 'ZIP file not found. Please regenerate.'}), 404
+            
+        return send_file(zip_path, as_attachment=True, download_name='invitations.zip')
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error downloading ZIP: {str(e)}'})
+
+
+@app.route('/admin/logs')
+def view_logs():
+    """View system usage logs"""
+    logs = get_all_logs()
+    return render_template('admin_logs.html', logs=logs)
 
 
 if __name__ == '__main__':
@@ -338,4 +386,4 @@ if __name__ == '__main__':
     print("4. Adjust font size and color")
     print("5. Click 'Generate PDFs' to create invitations")
     print("=" * 60)
-    # app.run(debug=True, port=5000)
+    app.run(debug=True, host="0.0.0.0", port=3000)
